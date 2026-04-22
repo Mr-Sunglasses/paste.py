@@ -349,17 +349,17 @@
         <div class="terminal-content">
             <h3>ABOUT</h3>
             <p>A simple pastebin powered by FastAPI. </p>
-            <p>paste.py 🐍 is Fully Free and Open-Source <a href="https://github.com/FOSS-Community/paste.py">Source Code</a> </p>
+            <p>paste.py 🐍 is Fully Free and Open-Source <a href="{{ source_code_url }}">Source Code</a> </p>
             <ul>
                 <li>Simple API</li> 
                 <li>CLI</li>
                 <li>Web form</li>
             </ul>
 
-            <p><strong>> Web Form:</strong> <a href="{{ url_for('web') }}">https://paste.fosscu.org/web</a></p>
+            <p><strong>> Web Form:</strong> <a href="{{ url_for('web') }}">{{ base_url }}/web</a></p>
 
             <h3>API USAGE</h3>
-            <p><strong>> POST:</strong> https://paste.fosscu.org/paste</p>
+            <p><strong>> POST:</strong> {{ base_url }}/paste</p>
             <p>Send the raw data along. Will respond with a link to the paste.</p>
 
             <ul>
@@ -370,28 +370,28 @@
 
             <p>Pasting is heavily rate limited.</p>
 
-            <p><strong>> GET:</strong> https://paste.fosscu.org/paste/&lt;id&gt;</p>
+            <p><strong>> GET:</strong> {{ base_url }}/paste/&lt;id&gt;</p>
             <p>Retrieve the paste with the given id as plain-text.</p>
 
-            <p><strong>> DELETE:</strong> https://paste.fosscu.org/paste/&lt;id&gt;</p>
+            <p><strong>> DELETE:</strong> {{ base_url }}/paste/&lt;id&gt;</p>
             <p>Delete the paste with the given id.</p>
 
             <h3>EXAMPLES</h3>
             <p><strong>> cURL:</strong> Paste a file named 'file.txt'</p>
             <div class="code-container">
-                <pre><code>curl -X POST -F "file=@file.txt" https://paste.fosscu.org/file</code></pre>
+                <pre><code>curl -X POST -F "file=@file.txt" {{ base_url }}/file</code></pre>
                 <button class="copy-button" title="Copy to clipboard"><i class="fas fa-clipboard"></i></button>
             </div>
 
             <p><strong>> cURL:</strong> Paste from stdin</p>
             <div class="code-container">
-                <pre><code>echo "Hello, world." | curl -X POST -F "file=@-" https://paste.fosscu.org/file</code></pre>
+                <pre><code>echo "Hello, world." | curl -X POST -F "file=@-" {{ base_url }}/file</code></pre>
                 <button class="copy-button" title="Copy to clipboard"><i class="fas fa-clipboard"></i></button>
             </div>
 
             <p><strong>> cURL:</strong> Delete an existing paste</p>
             <div class="code-container">
-                <pre><code>curl -X DELETE https://paste.fosscu.org/paste/<id></code></pre>
+                <pre><code>curl -X DELETE {{ base_url }}/paste/<id></code></pre>
                 <button class="copy-button" title="Copy to clipboard"><i class="fas fa-clipboard"></i></button>
             </div>
 
@@ -399,7 +399,7 @@
             <div class="code-container">
                 <pre><code>function paste() {
     local file=${1:-/dev/stdin}
-    curl -X POST -F "file=@${file}" https://paste.fosscu.org/file
+    curl -X POST -F "file=@${file}" {{ base_url }}/file
     echo '\n'
 }</code></pre>
                 <button class="copy-button" title="Copy to clipboard"><i class="fas fa-clipboard"></i></button>

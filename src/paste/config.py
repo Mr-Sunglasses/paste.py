@@ -9,6 +9,7 @@ class Config(BaseSettings):
     MINIO_SECRET_KEY: str
     MINIO_BUCKET_NAME: str
     BASE_URL: str
+    SOURCE_CODE_URL: str = "https://github.com/FOSS-Community/paste.py"
     SQLALCHEMY_DATABASE_URL: str
 
     model_config = SettingsConfigDict(env_file=".env")

@@ -18,7 +18,9 @@ client = boto3.client(
 )
 
 
-def create_bucket_if_not_exists(bucket_name: str = get_settings().MINIO_BUCKET_NAME) -> None:
+def create_bucket_if_not_exists(
+    bucket_name: str = get_settings().MINIO_BUCKET_NAME,
+) -> None:
     try:
         client.create_bucket(Bucket=bucket_name)
     except ClientError as exc:

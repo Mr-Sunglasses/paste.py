@@ -4,181 +4,260 @@
 
 <hr>
 
-paste.py 🐍 - A pastebin written in python.
+paste.py 🐍 is a simple pastebin written in Python and powered by FastAPI.
 
-# 🤔 Pre-requisites
+## 🤔 Prerequisites
 
 - `python3`
 - `pdm`
+- `docker` and Docker Compose plugin if you want to run the full local stack with containers
 
 ## 🐍 Python Version Support
 
-This project is designed to be compatible with specific versions of Python for optimal performance and stability.
-
-### Supported Python Version
+This project is designed to work best with:
 
 - **Python 3.11.3**
 
-> ❗️ For the best experience and performance, it is recommended to use the version mentioned above.
-
-Before diving into the project, ensure that you have the correct Python version installed. To check the version of Python you currently have, execute the following command in your terminal:
+Check your Python version with:
 
 ```bash
 python --version
 ```
 
-### 🐍 Installing Python 3.11.3 with `pyenv`
+### Installing Python 3.11.3 with `pyenv`
 
-**Protip:** Managing multiple Python versions is a breeze with [pyenv](https://github.com/pyenv/pyenv). It allows you to seamlessly switch between different Python versions without the need to reinstall them.
+Managing Python versions is easiest with [pyenv](https://github.com/pyenv/pyenv).
 
-If you haven't installed `pyenv` yet, follow their [official guide](https://github.com/pyenv/pyenv) to set it up.
+If you do not have `pyenv`, install it using their [official guide](https://github.com/pyenv/pyenv).
 
-Once you have `pyenv` ready, install the recommended Python version by running:
+Then install the recommended Python version:
 
 ```bash
 pyenv install 3.11.3
 ```
 
-> When you navigate to this project's directory in the future, `pyenv` will automatically select the recommended Python version, thanks to the `.python-version` file in the project root.
+> When you enter this project directory later, `pyenv` can automatically pick the version from the `.python-version` file.
 
-# 📦 Setup
+## ⚙️ Environment Variables
 
-## Local setup 🛠️ with Docker 🐳
+The application reads configuration from environment variables and also supports loading them from a local `.env` file.
 
-- **Installing and running**:
-  Before you begin, ensure you have docker installed. If not, refer to the [official documentation](https://docs.docker.com/engine/install/) to install docker.
-  ```bash
-  docker pull mrsunglasses/pastepy
-  docker run -d -p 8080:8080 --name pastepyprod mrsunglasses/pastepy
-  ```
+### Required variables
 
-- **Using docker-compose**:
-  You can also use docker-compose to run the project locally by running the following command:
-  <br>
-  - **Clone the repository**:
-  Get the project source code from GitHub:
-  
-  ```bash
-  git clone https://github.com/FOSS-Community/paste.py.git
-  ```
-  
-  - **Navigate to the Project Directory**:
-  
-  ```bash
-  cd paste.py
-  ```
+- `MINIO_CLIENT_LINK` — S3-compatible endpoint used by the app
+- `MINIO_ACCESS_KEY` — object storage access key
+- `MINIO_SECRET_KEY` — object storage secret key
+- `MINIO_BUCKET_NAME` — object storage bucket name
+- `BASE_URL` — public base URL for your deployment, used in API responses and homepage examples
+- `SQLALCHEMY_DATABASE_URL` — database connection string
 
-  - **Run the project using docker-compose**:
-  
-  ```bash
-  docker-compose up
-  ```
+### Optional variables
 
-## Local setup 🛠️ without Docker 🐳
+- `SOURCE_CODE_URL` — source code link shown on the homepage  
+  Default: `https://github.com/FOSS-Community/paste.py`
 
-### Setting Up the Project with PDM
+### Example `.env`
 
-[PDM (Python Development Master)](https://pdm.fming.dev/latest/) is utilized for dependency management in this project. To set up and run the project:
+```bash
+MINIO_CLIENT_LINK=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123
+MINIO_BUCKET_NAME=pastebucket
+BASE_URL=http://127.0.0.1:8080
+SOURCE_CODE_URL=https://github.com/FOSS-Community/paste.py
+SQLALCHEMY_DATABASE_URL=postgresql://postgres:mytestpassword@127.0.0.1:5432/pastedb
+```
 
-- **Installing PDM**:
-  Before you begin, ensure you have PDM installed. If not, refer to the [official documentation](https://pdm.fming.dev/latest/) to install PDM.
+## 📦 Setup
 
-- **Clone the Repository**:
-  Get the project source code from GitHub:
+### Local setup with Docker
 
-  ```bash
-  git clone https://github.com/FOSS-Community/paste.py.git
-  ```
+This repository includes a development Docker Compose stack under `dev/docker-compose.yml` with:
 
-- **Navigate to the Project Directory**:
+- PostgreSQL
+- RustFS / S3-compatible object storage
+- the `paste.py` application
 
-  ```bash
-  cd paste.py
-  ```
+#### Run the development stack
 
-- **Install Dependencies**:
-  Use PDM to install the project's dependencies:
-  ```bash
-  pdm install
-  ```
+1. Clone the repository:
 
-* **Start the Project**:
-  Use PDM to run the project:
-  ```bash
-  pdm run start
-  ```
-  - You can also use `pdm run dev` to start the dev server.
+```bash
+git clone https://github.com/FOSS-Community/paste.py.git
+cd paste.py
+```
 
-## Setting Up and Testing the Project
+2. Start the development stack:
 
-To ensure the code quality and functionality of the project, follow the steps below:
+```bash
+docker compose -f dev/docker-compose.yml up --build
+```
 
-### Installing Git Hooks with `pre-commit`
+3. Open the app:
 
-Before making any commits, it's essential to ensure that your code meets the quality standards. This project utilizes `pre-commit` hooks to automatically check your changes before any commit.
+- Homepage: `http://127.0.0.1:8082`
+- Web form: `http://127.0.0.1:8082/web`
+- Health check: `http://127.0.0.1:8082/health`
 
-Install the pre-commit hooks with the following command:
+> The Docker development stack publishes the app on port `8082`, so the compose file sets `BASE_URL=http://127.0.0.1:8082`.
+
+#### Stop the development stack
+
+```bash
+docker compose -f dev/docker-compose.yml down
+```
+
+#### Run the published Docker image
+
+You can also run the published image directly, but the app still requires a database and S3-compatible object storage to already be available.
+
+Example:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  --name pastepy \
+  -e MINIO_CLIENT_LINK=http://host.docker.internal:9000 \
+  -e MINIO_ACCESS_KEY=minioadmin \
+  -e MINIO_SECRET_KEY=minioadmin123 \
+  -e MINIO_BUCKET_NAME=pastebucket \
+  -e BASE_URL=http://127.0.0.1:8080 \
+  -e SOURCE_CODE_URL=https://github.com/FOSS-Community/paste.py \
+  -e SQLALCHEMY_DATABASE_URL=postgresql://postgres:mytestpassword@host.docker.internal:5432/pastedb \
+  mrsunglasses/pastepy
+```
+
+> `host.docker.internal` works well on macOS and Windows. On Linux, replace it with the actual host address or attach the container to a Docker network where your database and object storage are reachable by service name.
+
+If you already have a `.env` file with the required variables, you can also use:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  --name pastepy \
+  --env-file .env \
+  mrsunglasses/pastepy
+```
+
+### Local setup without Docker
+
+#### Setting up the project with PDM
+
+[PDM](https://pdm.fming.dev/latest/) is used for dependency management in this project.
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/FOSS-Community/paste.py.git
+cd paste.py
+```
+
+2. Install dependencies:
+
+```bash
+pdm install
+```
+
+3. Create a `.env` file and set the required variables.
+
+4. Run the app:
+
+```bash
+pdm run start
+```
+
+For development with auto-reload:
+
+```bash
+pdm run dev
+```
+
+## 🧪 Development and Testing
+
+### Install Git hooks
+
+This project uses `pre-commit` hooks to help maintain code quality.
 
 ```bash
 pre-commit install
 ```
 
-### Running Tests
-
-To ensure the project's functionality, you should run all the provided tests. Execute the following command to run the tests:
+### Run tests
 
 ```bash
 pdm run test
 ```
 
-### Testing the Running Server
-
-Once you have your server up and running, you can send requests to it from another terminal to test its responsiveness and functionality.
-
-Here are a couple of `GET` requests you can make using [curl](https://curl.se/):
+### Run database migrations
 
 ```bash
-curl http://0.0.0.0:8080/health
+pdm run migrate
 ```
 
-> These endpoints typically return the health status or readiness of the server, helping in diagnostics and monitoring.
+### Test the running server
 
-# 🗒️ How to contribute
-
-> ❗️Important: **Please read the [Code of Conduct](CODE_OF_CONDUCT.md) and go through [Contributing Guideline](CONTRIBUTING.md) before contributing to paste.py**
-
-- Feel free to open an issue for any clarifications or suggestions.
-
-<hr>
-
-## Uasge:
-
-### Uisng CLI
-
-> cURL is required to use the CLI.
-
-- Paste a file named 'file.txt'
+If you started the app locally without Docker on port `8080`:
 
 ```bash
-curl -X POST -F "file=@file.txt" https://paste.fosscu.org/file
+curl http://127.0.0.1:8080/health
+```
+
+If you started the Docker development stack:
+
+```bash
+curl http://127.0.0.1:8082/health
+```
+
+## 🗒️ Usage
+
+### Using the CLI
+
+> `curl` is required to use the CLI examples below.
+
+Replace `<BASE_URL>` with your deployment URL. This should match the value you set in `BASE_URL`.
+
+- Paste a file named `file.txt`
+
+```bash
+curl -X POST -F "file=@file.txt" <BASE_URL>/file
 ```
 
 - Paste from stdin
 
 ```bash
-echo "Hello, world." | curl -X POST -F "file=@-" https://paste.fosscu.org/file
+echo "Hello, world." | curl -X POST -F "file=@-" <BASE_URL>/file
 ```
 
 - Delete an existing paste
 
 ```bash
-curl -X DELETE https://paste.fosscu.org/paste/<id>
+curl -X DELETE <BASE_URL>/paste/<id>
 ```
 
-### Using the web interface:
+### Using the web interface
 
-[Go here](https://paste.fosscu.org/web)
+Open:
+
+```bash
+<BASE_URL>/web
+```
+
+### API notes
+
+- `POST <BASE_URL>/paste` — create a paste from raw body content
+- `GET <BASE_URL>/paste/<id>` — retrieve a paste as plain text
+- `DELETE <BASE_URL>/paste/<id>` — delete a paste
+
+The homepage examples and returned paste URLs are generated using `BASE_URL`, so set it to the public URL you want users to see.
+
+The homepage "Source Code" link is controlled by `SOURCE_CODE_URL`.
+
+## 🤝 Contributing
+
+> Important: please read the [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing Guidelines](CONTRIBUTING.md) before contributing to `paste.py`.
+
+- Feel free to open an issue for clarifications, bug reports, or suggestions.
 
 <hr>
 
-For info API usage and shell functions, see the [website](https://paste.fosscu.org).
+For more API usage and shell examples, run the project locally and visit your configured homepage at `<BASE_URL>`.

@@ -50,6 +50,7 @@ services:
       MINIO_SECRET_KEY: minioadmin123
       MINIO_BUCKET_NAME: pastebucket
       BASE_URL: http://127.0.0.1:8082
+      SOURCE_CODE_URL: https://github.com/FOSS-Community/paste.py
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:mytestpassword@postgres:5432/pastedb
     ports:
       - "8082:8080"
@@ -58,6 +59,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rustfs:
+        condition: service_started
 
 volumes:
   postgres_data:

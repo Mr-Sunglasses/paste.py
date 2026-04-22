@@ -7,9 +7,26 @@ from logging.config import dictConfig
 from pathlib import Path
 from typing import Awaitable, List, Optional, Union, cast
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+)
 from fastapi.templating import Jinja2Templates
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
@@ -27,9 +44,20 @@ from .config import get_settings
 from .database import Session_Local, get_db
 from .logging import LogConfig
 from .middleware import LimitUploadSize
-from .minio import create_bucket_if_not_exists, delete_object_data, get_object_data, post_object_data
+from .minio import (
+    create_bucket_if_not_exists,
+    delete_object_data,
+    get_object_data,
+    post_object_data,
+)
 from .models import Paste
-from .schema import HealthErrorResponse, HealthResponse, PasteCreate, PasteDetails, PasteResponse
+from .schema import (
+    HealthErrorResponse,
+    HealthResponse,
+    PasteCreate,
+    PasteDetails,
+    PasteResponse,
+)
 from .utils import extract_uuid
 
 # --------------------------------------------------------------------
@@ -138,7 +166,9 @@ async def startup_event():
 
 origins: List[str] = ["*"]
 
-BASE_URL: str = get_settings().BASE_URL
+settings = get_settings()
+BASE_URL: str = settings.BASE_URL.rstrip("/")
+SOURCE_CODE_URL: str = getattr(settings, "SOURCE_CODE_URL", "https://github.com/FOSS-Community/paste.py")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -165,7 +195,14 @@ async def indexpage(request: Request) -> Response:
     client_host = request.client.host if request.client is not None else "unknown"
     logger.debug(f"Received request from {client_host}")
     logger.info(f"Hit at home page - Method: {request.method}")
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "base_url": BASE_URL,
+            "source_code_url": SOURCE_CODE_URL,
+        },
+    )
 
 
 @app.get(
@@ -230,7 +267,10 @@ async def get_paste_data(
             extension = cast(str, data.extension)
 
         if content is None:
-            raise HTTPException(detail="Paste content is unavailable", status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(
+                detail="Paste content is unavailable",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
 
         if extension is None:
             extension = ""
@@ -450,14 +490,20 @@ async def web_post(
             db.commit()
             db.refresh(file)
             _uuid = file.pasteID
-            return RedirectResponse(f"{BASE_URL}/paste/{_uuid}", status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(
+                str(request.url_for("get_paste_data", uuid=str(_uuid))),
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
         else:
             file = Paste(content=content, extension=extension, expiresat=expiration_time)
             db.add(file)
             db.commit()
             db.refresh(file)
             _uuid = file.pasteID
-            return RedirectResponse(f"{BASE_URL}/paste/{_uuid}", status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(
+                str(request.url_for("get_paste_data", uuid=str(_uuid))),
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
     except Exception as e:
         db.rollback()
         raise HTTPException(

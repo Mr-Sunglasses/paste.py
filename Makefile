@@ -1,4 +1,4 @@
-.PHONY: help sync run dev test make-migration migrate docker-dev docker-dev-down docker-dev-build
+.PHONY: help sync run dev test make-migration migrate docker-dev-run docker-dev-down docker-dev-build
 
 .DEFAULT_GOAL := help
 
@@ -24,10 +24,10 @@ migrate: pyproject.toml ## Apply database migrations
 	pdm run migrate
 
 docker-dev-run: dev/docker-compose.yml ## Start development containers
-	docker-compose -f dev/docker-compose.yml up
+	docker compose -f dev/docker-compose.yml up --build
 
 docker-dev-down: dev/docker-compose.yml ## Stop development containers
-	docker-compose -f dev/docker-compose.yml down
+	docker compose -f dev/docker-compose.yml down
 
 docker-dev-build: dev/docker-compose.yml ## Build development containers
-	docker-compose -f dev/docker-compose.yml build
+	docker compose -f dev/docker-compose.yml build
